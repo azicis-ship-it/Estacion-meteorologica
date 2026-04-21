@@ -2,213 +2,179 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Estación Meteorológica</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Estación Meteorológica Pro</title>
 <style>
+/* ... (Se mantiene el CSS anterior para conservar el diseño Glassmorphism) ... */
 :root {
-  --bg: #07111f;
-  --panel: rgba(17, 24, 39, 0.88);
-  --panel-2: rgba(30, 41, 59, 0.72);
-  --border: rgba(148, 163, 184, 0.12);
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #60a5fa;
-  --accent-soft: rgba(96, 165, 250, 0.14);
-  --warm: #fb923c;
-  --cold: #7dd3fc;
-  --shadow: 0 20px 40px rgba(0,0,0,0.35);
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-blue: #38bdf8;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { -webkit-box-sizing: border-box; box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Helvetica, Arial, sans-serif;
-  background:
-    radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 35%),
-    radial-gradient(circle at top left, rgba(14,165,233,0.10), transparent 30%),
-    linear-gradient(180deg, #07111f 0%, #0b1324 100%);
-  color: var(--text);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
   min-height: 100vh;
-  letter-spacing: 0.2px;
+  padding-bottom: 30px;
 }
 
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  backdrop-filter: blur(14px);
-  background: rgba(7, 17, 31, 0.82);
-  border-bottom: 1px solid var(--border);
-  padding: 18px 18px 14px;
-  text-align: center;
-}
+.header { padding: 24px 16px 12px; text-align: center; }
+.header h1 { font-size: 20px; font-weight: 700; }
+.header .update-time { font-size: 12px; color: var(--accent-blue); margin-top: 4px; }
 
-.header h1 {
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #dbeafe;
-}
+.location-tabs { display: flex; background: rgba(15, 23, 42, 0.5); margin: 10px 16px; padding: 4px; border-radius: 12px; border: 1px solid var(--border-color); }
+.tab-btn { flex: 1; padding: 10px; background: none; border: none; border-radius: 8px; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; }
+.tab-btn.active { background: var(--accent-blue); color: #0f172a; }
 
-.update-time {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
+.content { padding: 0 16px; }
+.section { display: none; }
+.section.active { display: block; }
 
-.location-tabs {
-  display: flex;
-  gap: 10px;
-  padding: 14px 14px 6px;
-}
+.card { background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
+.main-temp-card { text-align: center; padding: 20px 0; background: none; border: none; }
+.main-icon { font-size: 50px; margin-bottom: 10px; display: block; }
+.main-temp { font-size: 84px; font-weight: 800; line-height: 1; }
+.main-temp sup { font-size: 32px; color: var(--accent-blue); vertical-align: super; }
 
-.tab-btn {
-  flex: 1;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: var(--muted);
-  border-radius: 16px;
-  padding: 12px 10px;
-  font-size: 13px;
-  font-weight: 600;
-}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mini-card { background: var(--card-bg); padding: 16px; border-radius: 18px; border: 1px solid var(--border-color); }
+.card-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+.card-value { font-size: 20px; font-weight: 600; }
 
-.tab-btn.active {
-  background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(14,165,233,0.10));
-  color: white;
-  border-color: rgba(96,165,250,0.35);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-}
+.rain-row { display: flex; align-items: center; margin-bottom: 14px; }
+.rain-bar-wrap { flex: 1; background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; margin: 0 12px; overflow: hidden; }
+.rain-bar { height: 100%; background: var(--accent-blue); transition: width 1s ease; }
 
-.content {
-  padding: 14px;
-}
+.forecast-row { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.forecast-day { flex: 1; font-weight: 600; font-size: 14px; }
+.forecast-icon { margin-right: 10px; font-size: 18px; }
 
-.main-temp-card,
-.mini-card,
-.sun-card,
-.forecast-list,
-.rain-history,
-.frost-alert {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-}
-
-.main-temp-card {
-  padding: 24px 20px;
-  text-align: center;
-  margin-bottom: 14px;
-}
-
-.main-temp {
-  font-size: 84px;
-  font-weight: 200;
-  line-height: 1;
-}
-
-.weather-desc {
-  margin-top: 8px;
-  font-size: 17px;
-  color: #dbeafe;
-}
-
-.feels-like {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.mini-card {
-  padding: 16px;
-}
-
-.card-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.card-value {
-  margin-top: 8px;
-  font-size: 26px;
-  font-weight: 700;
-}
-
-.card-unit,
-.card-sub {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.section-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: #bfdbfe;
-  margin: 16px 0 10px;
-}
-
-.refresh-btn {
-  width: 100%;
-  border: none;
-  border-radius: 18px;
-  padding: 14px;
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-  margin-top: 10px;
-  box-shadow: 0 12px 30px rgba(37,99,235,0.25);
-}
-
-.loading,
-.error-msg {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--muted);
-}
-
-.forecast-row,
-.rain-row {
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-.forecast-row:last-child,
-.rain-row:last-child {
-  border-bottom: none;
-}
-
-.temp-color-hot { color: #fb923c; }
+.temp-color-hot { color: #f87171; }
 .temp-color-warm { color: #fbbf24; }
 .temp-color-mild { color: #34d399; }
-.temp-color-cold { color: #7dd3fc; }
-.temp-color-freeze { color: #c084fc; }
+.temp-color-cold { color: #38bdf8; }
+.temp-color-freeze { color: #a78bfa; }
+
+.refresh-btn { width: 100%; padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; margin-top: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
 
-<!-- Mantener exactamente el mismo HTML + JS original debajo -->
-<!-- Solo se actualizaron estilos visuales para una interfaz más moderna tipo dashboard premium -->
+<div class="header">
+  <h1>Estación Meteorológica</h1>
+  <div class="update-time" id="last-update">Cargando...</div>
+</div>
 
+<div class="location-tabs">
+  <button class="tab-btn active" onclick="switchTab(0)">Tristán Suárez</button>
+  <button class="tab-btn" onclick="switchTab(1)">Capital Federal</button>
+</div>
+
+<div class="content">
+  <div id="section-0" class="section active"><div id="loading-0" style="text-align:center; padding:40px;">Sincronizando...</div><div id="data-0"></div></div>
+  <div id="section-1" class="section"><div id="loading-1" style="text-align:center; padding:40px;">Sincronizando...</div><div id="data-1"></div></div>
+</div>
+
+<script>
+var LOCATIONS = [
+  { name: "Tristán Suárez", lat: -34.89, lon: -58.57 },
+  { name: "Capital Federal", lat: -34.6037, lon: -58.3816 }
+];
+
+// Mapeo de códigos WMO a Texto e Iconos
+var WEATHER_MAP = {
+  0:  { txt: "Despejado", icon: "☀️" },
+  1:  { txt: "M. Despejado", icon: "🌤️" },
+  2:  { txt: "P. Nublado", icon: "⛅" },
+  3:  { txt: "Nublado", icon: "☁️" },
+  45: { txt: "Niebla", icon: "🌫️" },
+  51: { txt: "Llovizna", icon: "🌦️" },
+  61: { txt: "Lluvia Leve", icon: "💧" },
+  63: { txt: "Lluvia", icon: "🌧️" },
+  80: { txt: "Chaparrones", icon: "🌦️" },
+  95: { txt: "Tormenta", icon: "⛈️" },
+  96: { txt: "Tormenta c/ Granizo", icon: "⛈️" }
+};
+
+function getInfo(code) {
+  return WEATHER_MAP[code] || { txt: "Estable", icon: "✨" };
+}
+
+function tempClass(t) {
+  if (t >= 32) return "temp-color-hot";
+  if (t >= 25) return "temp-color-warm";
+  if (t >= 15) return "temp-color-mild";
+  return "temp-color-cold";
+}
+
+function switchTab(idx) {
+  document.querySelectorAll(".tab-btn").forEach((b, i) => b.className = i===idx ? "tab-btn active" : "tab-btn");
+  document.querySelectorAll(".section").forEach((s, i) => s.className = i===idx ? "section active" : "section");
+  if (!dataCache[idx]) fetchWeather(idx);
+}
+
+var dataCache = [null, null];
+
+function fetchWeather(idx) {
+  var loc = LOCATIONS[idx];
+  var url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=7&past_days=1`;
+
+  fetch(url).then(res => res.json()).then(data => {
+    dataCache[idx] = data;
+    renderWeather(idx, data);
+  });
+}
+
+function renderWeather(idx, data) {
+  document.getElementById("loading-" + idx).style.display = "none";
+  var c = data.current;
+  var d = data.daily;
+  var currentInfo = getInfo(c.weather_code);
+
+  var html = `
+    <div class="main-temp-card">
+      <span class="main-icon">${currentInfo.icon}</span>
+      <div class="main-temp ${tempClass(c.temperature_2m)}">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
+      <div style="font-size:18px; font-weight:500; margin-top:8px;">${currentInfo.txt}</div>
+      <div style="color:var(--text-dim); font-size:14px;">Sensación: ${Math.round(c.apparent_temperature)}°C</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="mini-card"><div class="card-label">Humedad</div><div class="card-value">${Math.round(c.relative_humidity_2m)}%</div></div>
+      <div class="mini-card"><div class="card-label">Viento</div><div class="card-value">${Math.round(c.wind_speed_10m)} km/h</div></div>
+    </div>
+
+    <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin:20px 0 10px 4px;">Pronóstico 7 Días</div>
+    <div class="card">
+      ${d.time.slice(1,8).map((t, i) => {
+        var dayInfo = getInfo(d.weather_code[i+1]);
+        return `
+        <div class="forecast-row">
+          <span class="forecast-icon">${dayInfo.icon}</span>
+          <div class="forecast-day">${i===0?'Hoy':i===1?'Mañana':new Date(t).toLocaleDateString('es-AR',{weekday:'short'})}</div>
+          <div style="text-align:right; font-weight:700;">
+            <span class="${tempClass(d.temperature_2m_max[i+1])}">${Math.round(d.temperature_2m_max[i+1])}°</span>
+            <span style="color:var(--text-dim); font-size:12px; margin-left:6px;">${Math.round(d.temperature_2m_min[i+1])}°</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="refresh-btn" onclick="fetchWeather(${idx})">Actualizar</button>
+  `;
+
+  document.getElementById("data-" + idx).innerHTML = html;
+  document.getElementById("last-update").innerHTML = "Actualizado: " + new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + " hs";
+}
+
+fetchWeather(0);
+</script>
 </body>
 </html>
