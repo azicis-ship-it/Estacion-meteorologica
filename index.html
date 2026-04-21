@@ -91,4 +91,103 @@ body {
 
 <script>
 var LOCATIONS = [
-  { name: "Tristán Suárez",
+  { name: "Tristán Suárez", lat: -34.89, lon: -58.57 },
+  { name: "Capital Federal", lat: -34.6037, lon: -58.3816 }
+];
+
+var WEATHER_MAP = {
+  0: { txt: "Despejado", icon: "☀️" }, 1: { txt: "M. Despejado", icon: "🌤️" },
+  2: { txt: "P. Nublado", icon: "⛅" }, 3: { txt: "Nublado", icon: "☁️" },
+  45: { txt: "Niebla", icon: "🌫️" }, 51: { txt: "Llovizna", icon: "🌦️" },
+  61: { txt: "Lluvia Leve", icon: "💧" }, 63: { txt: "Lluvia", icon: "🌧️" },
+  80: { txt: "Chaparrones", icon: "🌦️" }, 95: { txt: "Tormenta", icon: "⛈️" }
+};
+
+function getInfo(code) { return WEATHER_MAP[code] || { txt: "Estable", icon: "✨" }; }
+function getTempClass(t) { return t >= 30 ? "temp-hot" : t >= 22 ? "temp-warm" : t >= 14 ? "temp-mild" : "temp-cold"; }
+
+function fetchWeather(idx) {
+  var loc = LOCATIONS[idx];
+  // Solicitamos 1 día pasado para obtener "Ayer"
+  var url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=7&past_days=1`;
+
+  fetch(url).then(res => res.json()).then(data => {
+    renderWeather(idx, data);
+  });
+}
+
+function renderWeather(idx, data) {
+  var c = data.current;
+  var d = data.daily;
+  var currentInfo = getInfo(c.weather_code);
+
+  // Lógica de Lluvia: d.precipitation_sum[0] es AYER, [1] es HOY
+  var rainAyer = d.precipitation_sum[0] || 0;
+  var rainHoy = d.precipitation_sum[1] || 0;
+  var rainSemana = d.precipitation_sum.slice(1, 8).reduce((a, b) => a + b, 0); // Hoy + 6 días próx.
+  var maxVisual = Math.max(rainSemana, 10); // Para escala de barras
+
+  var html = `
+    <div class="main-temp-card">
+      <span class="main-icon">${currentInfo.icon}</span>
+      <div class="main-temp ${getTempClass(c.temperature_2m)}">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
+      <div style="font-size:18px; font-weight:600; margin-top:5px;">${currentInfo.txt}</div>
+      <div style="color:var(--text-dim); font-size:13px;">Sensación: ${Math.round(c.apparent_temperature)}°C</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="mini-card"><div class="card-label">Humedad</div><div class="card-value">${Math.round(c.relative_humidity_2m)}%</div></div>
+      <div class="mini-card"><div class="card-label">Viento</div><div class="card-value">${Math.round(c.wind_speed_10m)} <span style="font-size:12px">km/h</span></div></div>
+    </div>
+
+    <div class="section-title">Lluvia Acumulada</div>
+    <div class="card">
+      ${renderRainRow("Ayer", rainAyer, maxVisual)}
+      ${renderRainRow("Hoy", rainHoy, maxVisual)}
+      ${renderRainRow("Semana", rainSemana, maxVisual)}
+    </div>
+
+    <div class="section-title">Pronóstico y Proximos mm</div>
+    <div class="card">
+      ${d.time.slice(1, 8).map((t, i) => {
+        var dayInfo = getInfo(d.weather_code[i+1]);
+        var rainDay = d.precipitation_sum[i+1] || 0;
+        return `
+        <div class="forecast-row">
+          <div class="forecast-day">${i===0?'Hoy':i===1?'Mañana':new Date(t + 'T00:00:00').toLocaleDateString('es-AR',{weekday:'short'})}</div>
+          <span class="forecast-icon">${dayInfo.icon}</span>
+          <div class="forecast-rain-mm">${rainDay > 0 ? rainDay.toFixed(1) + ' mm' : ''}</div>
+          <div class="forecast-temps">
+            <span class="${getTempClass(d.temperature_2m_max[i+1])}">${Math.round(d.temperature_2m_max[i+1])}°</span>
+            <span style="color:var(--text-dim); font-size:12px; margin-left:8px;">${Math.round(d.temperature_2m_min[i+1])}°</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="refresh-btn" onclick="fetchWeather(${idx})">🔄 Actualizar</button>
+  `;
+
+  document.getElementById("data-" + idx).innerHTML = html;
+  document.getElementById("last-update").innerHTML = "Sincronizado: " + new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + " hs";
+}
+
+function renderRainRow(label, val, max) {
+  var perc = Math.min((val / max) * 100, 100);
+  return `
+    <div class="rain-row">
+      <div class="rain-label">${label}</div>
+      <div class="rain-bar-wrap"><div class="rain-bar" style="width:${perc}%"></div></div>
+      <div class="rain-mm-val">${val.toFixed(1)}<span style="font-size:10px">mm</span></div>
+    </div>`;
+}
+
+function switchTab(idx) {
+  document.querySelectorAll(".tab-btn").forEach((b, i) => b.className = i===idx ? "tab-btn active" : "tab-btn");
+  document.querySelectorAll(".section").forEach((s, i) => s.className = i===idx ? "section active" : "section");
+  fetchWeather(idx);
+}
+
+fetchWeather(0);
+</script>
+</body>
+</html>
